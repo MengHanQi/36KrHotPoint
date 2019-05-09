@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>数据可视化</title>
+    <link rel="stylesheet" type="text/css" href="static/bootstrap/css/bootstrap.css">
+    <style type="text/css">
+    body {
+        height: 100%;
+        width: 100%;
+    }
+
+    div.main {
+        margin: 0 auto;
+        width: 90%;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="main">
+        <div id="place" style="width:100%; height:600px"></div>
+        <div id="company" style="width:100%; height:600px"></div>
+        <div id="date" style="width:100%; height:600px"></div>
+    </div>
+    <script type="text/javascript" src="static/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/echarts/2.2.5/echarts-all.js"></script>
+    <script type="text/javascript">
+    $(function() {
+        function createRandomItemStyle() {
+            return {
+                normal: {
+                    color: 'rgb(' + [
+                        Math.round(Math.random() * 160),
+                        Math.round(Math.random() * 160),
+                        Math.round(Math.random() * 160)
+                    ].join(',') + ')'
+                }
+            };
+        }
+
+        function drawBarChart(title, elem, names, values) {
+            var option = {
+                title: {
+                    text: title
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: { show: true, type: ['line', 'bar'] },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                xAxis: [{
+                    axisLabel:{
+                        rotate:90
+                    },
+                    type: 'category',
+                    data: names
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                series: [{
+                    name: '次数',
+                    type: 'bar',
+                    data: values
+                }]
+            };
+            var myChart = echarts.init(elem);
+            myChart.setOption(option);
+        }
+
+        function loadPlaceData() {
+            $.ajax({
+                url: "/place",
+                type: "GET",
+                contentType: "application/json",
+                success: function(res) {
+                    var elem = document.getElementById("place");
+                    drawBarChart('省份+国家在简讯中出现的次数', elem, res.names, res.values);
+                }
+            })
+        }
+
+        function loadCompanyData() {
+            $.ajax({
+                url: "/company",
+                type: "GET",
+                contentType: "application/json",
+                success: function(res) {
+                    var elem = document.getElementById("company");
+                    drawBarChart('大型公司在标题中出现次数', elem, res.names, res.values);
+                }
+            })
+        }
+
+        function drawLineChart(title, days, values, elem) {
+            var option = {
+                title: {
+                    text: title,
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                toolbox: {
+                    show: true,
+                    feature: {
+                        mark: { show: true },
+                        dataView: { show: true, readOnly: false },
+                        magicType: { show: true, type: ['line', 'bar'] },
+                        restore: { show: true },
+                        saveAsImage: { show: true }
+                    }
+                },
+                calculable: true,
+                xAxis: [{
+                    type: 'category',
+                    boundaryGap: false,
+                    data: days
+                }],
+                yAxis: [{
+                    type: 'value',
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                }],
+                series: [{
+                    name: "次数",
+                    type: "line",
+                    data: values
+                }]
+            };
+            var myChart = echarts.init(elem);
+            myChart.setOption(option);
+        }
+
+        function loadDateData() {
+            $.ajax({
+                url: "/date",
+                type: "GET",
+                contentType: "application/json",
+                success: function(res) {
+                    var days = res.days;
+                    var values = res.values;
+                    var elem = document.getElementById("date");
+                    var title = "热点数量每日变化趋势图";
+                    drawLineChart(title, days, values, elem);
+                }
+            })
+        }
+
+        loadPlaceData();
+        loadCompanyData();
+        loadDateData();
+    })
+    </script>
+</body>
+
+</html>
